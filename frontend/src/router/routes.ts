@@ -14,9 +14,9 @@ const routes: RouteRecordRaw[] = [
         component: OffersView,
       },
       {
-        path: 'new-offer',
-        name: 'new-offer',
-        component: () => import('@/views/NewOfferView.vue'),
+        path: 'offer-form/:id?',
+        name: 'offer-form',
+        component: () => import('@/views/OfferFormView.vue'),
       },
     ],
   },

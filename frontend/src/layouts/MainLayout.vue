@@ -17,7 +17,7 @@ const tabs: Tab[] = [
     label: 'Ofertas',
   },
   {
-    name: 'new-offer',
+    name: 'offer-form',
     label: 'Nueva Oferta',
   },
 ]
