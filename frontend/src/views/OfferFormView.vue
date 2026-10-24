@@ -9,7 +9,7 @@
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h3 mb-0">
           {{ isEdit ? 'Editar oferta' : 'Nueva oferta' }}
-          <span v-if="isEdit" class="badge text-bg-light border ms-2">NOMBRE DE LICITACIÓN</span>
+          <span v-if="isEdit" class="badge text-bg-light border ms-2">{{ offerConsecutive }}</span>
         </h1>
       </div>
 
@@ -37,9 +37,12 @@ import BasicInfoSection from '@/components/offers/BasicInfoSection.vue'
 import ScheduleSection from '@/components/offers/ScheduleSection.vue'
 import DocumentsSection from '@/components/offers/DocumentsSection.vue'
 
+import { formatTime } from '@/helpers/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AxiosService from '@/api/services/ApiService'
 
+import type { ApiGetOfferResponse } from '@/api/types/offer.type'
 import type { CreateForm } from '@/views/interfaces/OfferFormView.ts'
 
 const route = useRoute()
@@ -60,13 +63,27 @@ const form = ref<CreateForm>({
   fecha_cierre: '',
   hora_cierre: '',
 })
+const offerConsecutive = ref()
 
 onMounted(async () => {
   if (!isEdit.value) return
 
   try {
     isLoading.value = true
-    // TODO: Agregar lógica para cargar la licitación
+    const response = await AxiosService.get<ApiGetOfferResponse>(`/ofertas/${route.params.id}`)
+
+    offerConsecutive.value = response.data.consecutivo
+    form.value = {
+      objeto: response.data.objeto,
+      descripcion: response.data.descripcion,
+      moneda: response.data.moneda,
+      presupuesto: response.data.presupuesto,
+      actividad_id: response.data.actividad_id,
+      hora_inicio: formatTime(response.data.hora_inicio),
+      fecha_cierre: response.data.fecha_cierre,
+      hora_cierre: formatTime(response.data.hora_cierre),
+      fecha_inicio: response.data.fecha_inicio,
+    }
   } catch (error) {
     console.error('Error al cargar la oferta', error)
   } finally {
@@ -88,7 +105,7 @@ const validateForm = () => {
   )
 }
 
-const saveForm = (event: Event) => {
+const saveForm = async (event: Event) => {
   const target = event.target as HTMLFormElement
   if (!validateForm()) {
     target.classList.add('was-validated')
@@ -97,10 +114,16 @@ const saveForm = (event: Event) => {
 
   try {
     isSaving.value = true
-    // TODO: Agregar lógica para guardar la licitación
-    setTimeout(() => {
-      router.push({ name: 'offers' })
-    }, 1000)
+
+    const body = form.value
+
+    if (isEdit.value) {
+      await AxiosService.put(`/ofertas/${route.params.id}`, body)
+    } else {
+      await AxiosService.post('/ofertas', body)
+    }
+
+    router.push({ name: 'offers' })
   } catch (error) {
     console.error('Hubo un error con la petición', error)
   } finally {

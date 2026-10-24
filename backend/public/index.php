@@ -26,7 +26,7 @@ $router->get('/api/actividades', ActividadController::class, 'index');
 $router->get('/api/ofertas', OfertaController::class, 'index');
 $router->get('/api/ofertas/{id}', OfertaController::class, 'show');
 $router->post('/api/ofertas', OfertaController::class, 'store');
-$router->post('/api/ofertas/{id}', OfertaController::class, 'update');
+$router->put('/api/ofertas/{id}', OfertaController::class, 'update');
 
 $router->dispatch(
   $_SERVER['REQUEST_METHOD'],

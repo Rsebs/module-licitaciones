@@ -1,3 +1,5 @@
+import type { MoneyTypes } from "@/components/offers/types/BasicInfoSection"
+
 export interface ApiOffer {
   id: number
   consecutivo: string
@@ -20,8 +22,8 @@ export interface ApiGetOfferResponse {
   consecutivo: string
   objeto: string
   descripcion: string
-  moneda: string
-  presupuesto: string
+  moneda: MoneyTypes
+  presupuesto: number
   actividad_id: number
   fecha_inicio: string
   hora_inicio: string

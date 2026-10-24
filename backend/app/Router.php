@@ -16,6 +16,11 @@ class Router
     $this->add('POST', $pattern, $controller, $action);
   }
 
+  public function put($pattern, $controller, $action)
+  {
+    $this->add('PUT', $pattern, $controller, $action);
+  }
+
   private function add($method, $pattern, $controller, $action)
   {
     // '/api/ofertas/{id}'  becomes  #^/api/ofertas/(?P<id>\d+)$#

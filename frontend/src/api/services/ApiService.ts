@@ -49,4 +49,17 @@ export default class AxiosService {
       this.handleError(error)
     }
   }
+
+  static async put<T = unknown>(
+    url: string,
+    data?: Record<string, unknown>,
+    params?: Record<string, unknown>,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.axiosInstance.put(url, data, { params })
+      return response.data
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
 }

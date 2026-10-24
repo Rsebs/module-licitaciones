@@ -1,4 +1,4 @@
-type MoneyTypes = 'COP' | 'USD' | 'EUR'
+export type MoneyTypes = 'COP' | 'USD' | 'EUR'
 
 export interface BasicInfoForm {
   objeto: string
