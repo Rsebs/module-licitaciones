@@ -32,7 +32,7 @@ const selectTab = (tabName: string) => {
   <div class="min-vh-100 d-flex flex-column bg-light">
     <nav class="navbar navbar-dark bg-dark shadow-sm px-4">
       <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1 fs-4">Licitaciones</span>
+        <RouterLink :to="{name: 'offers'}" class="navbar-brand mb-0 h1 fs-4">Licitaciones</RouterLink>
       </div>
     </nav>
 

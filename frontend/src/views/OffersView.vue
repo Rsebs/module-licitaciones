@@ -108,35 +108,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import AxiosService from '@/api/services/ApiService'
+import type { ApiOffer } from '@/api/types/offer.type'
 import type { APIPaginate } from '@/api/types/axiosResponse.type'
 
-interface Offer {
-  id: number
-  consecutivo: string
-  objeto: string
-  descripcion: string
-  moneda: string
-  presupuesto: string
-  actividad_id: number
-  fecha_inicio: string
-  hora_inicio: string
-  fecha_cierre: string
-  hora_cierre: string
-  estado: string
-  creado_en: string
-  actualizado_en: string
-}
-
-const offers = ref<Offer[]>([])
+const offers = ref<ApiOffer[]>([])
 const meta = ref<APIPaginate>()
 const isLoading = ref(false)
 
 const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {
   try {
     isLoading.value = true
-    const response = await AxiosService.get<Offer[]>('/ofertas', queryParams)
+    const response = await AxiosService.get<ApiOffer[]>('/ofertas', queryParams)
     offers.value = response.data
     meta.value = response.meta
   } catch (error) {
@@ -146,5 +130,7 @@ const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {
   }
 }
 
-onGetOffers()
+onMounted(() => {
+  onGetOffers()
+})
 </script>
