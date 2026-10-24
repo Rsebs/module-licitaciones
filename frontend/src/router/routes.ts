@@ -18,6 +18,11 @@ const routes: RouteRecordRaw[] = [
         name: 'offer-form',
         component: () => import('@/views/OfferFormView.vue'),
       },
+      {
+        path: 'offer-details/:id',
+        name: 'offer-details',
+        component: () => import('@/views/OfferDetailView.vue'),
+      },
     ],
   },
 ]

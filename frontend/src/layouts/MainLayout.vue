@@ -8,7 +8,7 @@ interface Tab {
 }
 
 const router = useRouter()
-const route = useRoute();
+const route = useRoute()
 
 const activeTab = ref(route.name)
 const tabs: Tab[] = [
@@ -21,7 +21,6 @@ const tabs: Tab[] = [
     label: 'Nueva Oferta',
   },
 ]
-
 
 const selectTab = (tabName: string) => {
   activeTab.value = tabName
@@ -38,10 +37,9 @@ const selectTab = (tabName: string) => {
     </nav>
 
     <div class="container-fluid flex-grow-1 d-flex flex-column p-4">
-      <ul class="nav nav-tabs  mb-4">
+      <ul class="nav nav-tabs mb-4">
         <li class="nav-item" v-for="tab in tabs" :key="tab.name">
           <button
-            :to="{ name: tab.name }"
             class="nav-link"
             :class="{ active: activeTab === tab.name }"
             @click="selectTab(tab.name)"
