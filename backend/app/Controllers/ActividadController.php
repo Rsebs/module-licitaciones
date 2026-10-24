@@ -8,8 +8,8 @@ class ActividadController extends Controller
 {
   public function index()
   {
-    $actividades = Actividad::orderBy('producto')->limit(50)->get();
+    $activities = Actividad::orderBy('producto')->limit(50)->get();
 
-    $this->json(['data' => $actividades]);
+    $this->json(['data' => $activities]);
   }
 }

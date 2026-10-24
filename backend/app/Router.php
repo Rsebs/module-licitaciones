@@ -4,41 +4,41 @@ namespace App;
 
 class Router
 {
-  private $rutas = [];
+  private $routes = [];
 
-  public function get($patron, $controlador, $accion)
+  public function get($pattern, $controller, $action)
   {
-    $this->agregar('GET', $patron, $controlador, $accion);
+    $this->add('GET', $pattern, $controller, $action);
   }
 
-  public function post($patron, $controlador, $accion)
+  public function post($pattern, $controller, $action)
   {
-    $this->agregar('POST', $patron, $controlador, $accion);
+    $this->add('POST', $pattern, $controller, $action);
   }
 
-  private function agregar($metodo, $patron, $controlador, $accion)
+  private function add($method, $pattern, $controller, $action)
   {
-    // '/api/ofertas/{id}'  se convierte en  #^/api/ofertas/(?P<id>\d+)$#
-    $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>\d+)', $patron) . '$#';
-    $this->rutas[] = [$metodo, $regex, $controlador, $accion];
+    // '/api/ofertas/{id}'  becomes  #^/api/ofertas/(?P<id>\d+)$#
+    $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>\d+)', $pattern) . '$#';
+    $this->routes[] = [$method, $regex, $controller, $action];
   }
 
-  public function dispatch($metodo, $ruta)
+  public function dispatch($method, $path)
   {
-    $ruta = '/' . trim($ruta, '/');   // ignora la barra final: /api/ofertas/ = /api/ofertas
+    $path = '/' . trim($path, '/');   // ignores the trailing slash
 
-    foreach ($this->rutas as $r) {
-      list($m, $regex, $controlador, $accion) = $r;
+    foreach ($this->routes as $route) {
+      list($routeMethod, $regex, $controller, $action) = $route;
 
-      if ($m === $metodo && preg_match($regex, $ruta, $coincidencias)) {
-        // Los valores de {id}, {docId}... llegan al controlador como números
+      if ($routeMethod === $method && preg_match($regex, $path, $matches)) {
+        // Values of {id}, {docId}... reach the controller as integers
         $params = [];
-        foreach ($coincidencias as $clave => $valor) {
-          if (is_string($clave)) {
-            $params[$clave] = (int) $valor;
+        foreach ($matches as $key => $value) {
+          if (is_string($key)) {
+            $params[$key] = (int) $value;
           }
         }
-        (new $controlador())->$accion($params);
+        (new $controller())->$action($params);
         return;
       }
     }
