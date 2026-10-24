@@ -2,8 +2,10 @@
 
 namespace App\Controllers;
 
+use App\FileUploader;
 use App\Models\Actividad;
 use App\Models\Oferta;
+use App\Models\OfertaDocumento;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class OfertaController extends Controller
@@ -27,9 +29,9 @@ class OfertaController extends Controller
     $this->json([
       'data' => $offers,
       'meta' => [
-        'page'      => $page,
-        'per_page'  => $perPage,
-        'total'     => $total,
+        'page' => $page,
+        'per_page' => $perPage,
+        'total' => $total,
         'last_page' => max(1, (int) ceil($total / $perPage)),
       ],
     ]);
@@ -77,12 +79,17 @@ class OfertaController extends Controller
 
     $this->json([
       'message' => 'Oferta creada correctamente.',
-      'data'    => Oferta::with(['actividad', 'documentos'])->find($offer->id),
+      'data' => Oferta::with(['actividad', 'documentos'])->find($offer->id),
     ], 201);
   }
 
   public function update($params)
   {
+    if ($this->bodyExceedsLimit()) {
+      $this->json(['message' => 'Los archivos superan el tamaño total que permite el servidor (post_max_size).'], 413);
+      return;
+    }
+
     $offer = Oferta::find($params['id']);
 
     if (!$offer) {
@@ -90,20 +97,114 @@ class OfertaController extends Controller
       return;
     }
 
-    list($data, $errors) = $this->validateOffer($this->input());
+    $input = $this->input();
+    list($data, $errors) = $this->validateOffer($input);
+    $documents = $this->readNewDocuments($input, $errors);
+
+    if ($offer->documentos()->count() + count($documents) < 1) {
+      $errors['documentos'][] = 'Debes registrar al menos un documento (PDF o ZIP).';
+    }
 
     if ($errors) {
       $this->json(['message' => 'Revisa los campos marcados.', 'errors' => $errors], 422);
       return;
     }
 
-    $offer->fill($data);
-    $offer->save();
+    $savedFiles = [];
+    try {
+      Capsule::connection()->transaction(function () use ($offer, $data, $documents, &$savedFiles) {
+        $offer->fill($data);
+        $offer->estado = 'Publicada';
+        $offer->save();
+
+        foreach ($documents as $document) {
+          $path = FileUploader::save($document['file']);
+          $savedFiles[] = $path;
+
+          $offer->documentos()->create([
+            'titulo' => $document['title'],
+            'descripcion' => $document['description'],
+            'archivo' => $path,
+            'nombre_original' => $document['original_name'],
+          ]);
+        }
+      });
+    } catch (\Throwable $e) {
+      foreach ($savedFiles as $path) {
+        FileUploader::delete($path);
+      }
+      throw $e;
+    }
 
     $this->json([
       'message' => 'Oferta actualizada correctamente.',
-      'data'    => Oferta::with(['actividad', 'documentos'])->find($offer->id),
+      'data' => Oferta::with(['actividad', 'documentos'])->find($offer->id),
     ]);
+  }
+
+  public function download($params)
+  {
+    $document = OfertaDocumento::where('id', $params['docId'])
+      ->where('licitacion_id', $params['id'])
+      ->first();
+
+    $path = $document ? FileUploader::absolutePath($document->archivo) : null;
+
+    if ($path === null) {
+      $this->json(['message' => 'El documento no existe o ya no está disponible.'], 404);
+      return;
+    }
+
+    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $fileName = trim((string) preg_replace('/[^\w\- ]+/u', '', $document->titulo));
+    $fileName = ($fileName !== '' ? $fileName : 'documento') . '.' . $extension;
+
+    header('Content-Type: ' . FileUploader::mimeType($extension));
+    header('Content-Length: ' . filesize($path));
+    header('Content-Disposition: attachment; filename="document.' . $extension . '"; filename*=UTF-8\'\'' . rawurlencode($fileName));
+    header('X-Content-Type-Options: nosniff');
+    readfile($path);
+  }
+
+  private function readNewDocuments(array $input, array &$errors)
+  {
+    $titles = isset($input['doc_titulo']) ? array_values((array) $input['doc_titulo']) : [];
+    $descriptions = isset($input['doc_descripcion']) ? array_values((array) $input['doc_descripcion']) : [];
+    $files = $this->files('doc_archivo');
+
+    $count = max(count($titles), count($descriptions), count($files));
+    $documents = [];
+
+    for ($i = 0; $i < $count; $i++) {
+      $title = (isset($titles[$i]) && is_scalar($titles[$i])) ? trim((string) $titles[$i]) : '';
+      $description = (isset($descriptions[$i]) && is_scalar($descriptions[$i])) ? trim((string) $descriptions[$i]) : '';
+      $file = isset($files[$i]) ? $files[$i] : null;
+
+      $problems = [];
+      if ($title === '') {
+        $problems[] = 'el título es obligatorio';
+      } elseif (mb_strlen($title) > 100) {
+        $problems[] = 'el título no puede superar 100 caracteres';
+      }
+      if ($description === '') {
+        $problems[] = 'la descripción es obligatoria';
+      } elseif (mb_strlen($description) > 200) {
+        $problems[] = 'la descripción no puede superar 200 caracteres';
+      }
+      $fileError = ($file === null) ? 'Debes seleccionar un archivo.' : FileUploader::validate($file);
+      if ($fileError !== null) {
+        $problems[] = rtrim(lcfirst($fileError), '.');
+      }
+
+      if ($problems) {
+        $errors['documentos'][] = 'Documento ' . ($i + 1) . ': ' . implode('; ', $problems) . '.';
+        continue;
+      }
+
+      $documents[] = ['title' => $title, 'description' => $description, 'file' => $file, 'original_name' => $file['name']];
+    }
+
+    return $documents;
   }
 
   private function validateOffer(array $input)
@@ -119,7 +220,7 @@ class OfertaController extends Controller
       'fecha_cierre',
       'hora_cierre'
     ];
-    $data   = [];
+    $data = [];
     $errors = [];
 
     foreach ($fields as $field) {

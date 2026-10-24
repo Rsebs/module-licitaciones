@@ -10,4 +10,6 @@ class OfertaDocumento extends Model
 
   const CREATED_AT = 'creado_en';
   const UPDATED_AT = null;
+
+  protected $fillable = ['titulo', 'descripcion', 'archivo', 'nombre_original'];
 }

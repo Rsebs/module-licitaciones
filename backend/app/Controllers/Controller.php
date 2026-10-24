@@ -29,4 +29,37 @@ abstract class Controller
     }
     return $_POST;
   }
+
+  protected function files($field)
+  {
+    if (!isset($_FILES[$field])) {
+      return [];
+    }
+
+    $raw = $_FILES[$field];
+    if (!is_array($raw['name'])) {
+      return [$raw];
+    }
+
+    $list = [];
+    foreach ($raw['name'] as $i => $name) {
+      $list[] = [
+        'name' => $name,
+        'tmp_name' => $raw['tmp_name'][$i],
+        'error' => $raw['error'][$i],
+        'size' => $raw['size'][$i],
+      ];
+    }
+    return $list;
+  }
+
+  protected function bodyExceedsLimit()
+  {
+    $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+
+    return stripos($contentType, 'multipart/form-data') === 0
+      && empty($_POST)
+      && empty($_FILES)
+      && !empty($_SERVER['CONTENT_LENGTH']);
+  }
 }
