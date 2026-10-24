@@ -1,4 +1,4 @@
-import type { MoneyTypes } from "@/components/offers/types/BasicInfoSection"
+import type { MoneyTypes } from '@/components/offers/types/BasicInfoSection'
 
 export interface ApiOffer {
   id: number
@@ -40,5 +40,15 @@ export interface ApiGetOfferResponse {
     familia: string
     clase: string
   }
-  documentos: Array<unknown>
+  documentos: Array<ApiOfferDocument>
+}
+
+export interface ApiOfferDocument {
+  id: number
+  licitacion_id: number
+  titulo: string
+  descripcion: string
+  archivo: string
+  nombre_original: string
+  creado_en: string
 }

@@ -15,7 +15,16 @@
 
       <BasicInfoSection v-model="form" />
       <ScheduleSection v-model="form" />
-      <DocumentsSection v-if="isEdit" />
+      <DocumentsSection
+        v-if="isEdit"
+        :documents="offerDocuments"
+        @addDocument="
+          (document: ApiOfferDocument) => {
+            newOfferDocuments.push(document)
+            offerDocuments.push(document)
+          }
+        "
+      />
 
       <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mt-4">
         <router-link class="btn btn-outline-secondary" to="/">Cancelar</router-link>
@@ -42,7 +51,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AxiosService from '@/api/services/ApiService'
 
-import type { ApiGetOfferResponse } from '@/api/types/offer.type'
+import type { ApiGetOfferResponse, ApiOfferDocument } from '@/api/types/offer.type'
 import type { CreateForm } from '@/views/interfaces/OfferFormView.ts'
 
 const route = useRoute()
@@ -65,6 +74,9 @@ const form = ref<CreateForm>({
 })
 const offerConsecutive = ref()
 
+const offerDocuments = ref<ApiOfferDocument[]>([])
+const newOfferDocuments = ref<ApiOfferDocument[]>([])
+
 onMounted(async () => {
   if (!isEdit.value) return
 
@@ -84,6 +96,7 @@ onMounted(async () => {
       hora_cierre: formatTime(response.data.hora_cierre),
       fecha_inicio: response.data.fecha_inicio,
     }
+    offerDocuments.value = response.data.documentos
   } catch (error) {
     console.error('Error al cargar la oferta', error)
   } finally {
@@ -115,12 +128,18 @@ const saveForm = async (event: Event) => {
   try {
     isSaving.value = true
 
-    const body = form.value
-
+    console.log(newOfferDocuments.value)
     if (isEdit.value) {
-      await AxiosService.put(`/ofertas/${route.params.id}`, body)
+      await AxiosService.postWithFile(`/ofertas/${route.params.id}`, {
+        ...form.value,
+        documentos: newOfferDocuments.value.map((d) => ({
+          title: d.titulo,
+          description: d.descripcion,
+        })),
+        doc_archivo: newOfferDocuments.value.map((d) => d.archivo),
+      })
     } else {
-      await AxiosService.post('/ofertas', body)
+      await AxiosService.post('/ofertas', form.value)
     }
 
     router.push({ name: 'offers' })

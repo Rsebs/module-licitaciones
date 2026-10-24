@@ -59,7 +59,6 @@
     </div>
   </div>
 
-  <!-- <pre>{{ meta }}</pre> -->
   <div
     class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"
     v-if="offers.length > 0"
@@ -114,7 +113,7 @@ import type { ApiOffer } from '@/api/types/offer.type'
 import type { APIPaginate } from '@/api/types/axiosResponse.type'
 
 const offers = ref<ApiOffer[]>([])
-const meta = ref<APIPaginate>()
+const meta = ref<APIPaginate | null>()
 const isLoading = ref(false)
 
 const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {

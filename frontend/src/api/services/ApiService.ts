@@ -50,6 +50,22 @@ export default class AxiosService {
     }
   }
 
+  static async postWithFile<T = unknown>(
+    url: string,
+    data?: Record<string, unknown>,
+    params?: Record<string, unknown>,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.axiosInstance.post(url, data, {
+        params,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return response.data
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
   static async put<T = unknown>(
     url: string,
     data?: Record<string, unknown>,

@@ -69,9 +69,8 @@
           <p v-if="offer?.documentos.length === 0" class="mb-0">
             Esta oferta aún no tiene documentos.
             <RouterLink :to="{ name: 'offer-form', params: { id: offer?.id } }">
-              Agrégalos desde la edición
+              Agrégalos desde la edición.
             </RouterLink>
-            .
           </p>
           <div class="table-responsive" v-else>
             <table class="table align-middle mb-0">
@@ -84,7 +83,22 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- Agregar listado de documentos -->
+                <tr v-if="offer?.documentos.length === 0">
+                  <td colspan="5" class="text-center">Sin documentos cargados</td>
+                </tr>
+                <tr v-else v-for="document in offer?.documentos" :key="document.id">
+                  <td>{{ document.titulo }}</td>
+                  <td class="text-break">{{ document.descripcion }}</td>
+                  <td>
+                    <a :href="document.archivo" target="_blank">
+                      {{ document.nombre_original }}
+                    </a>
+                  </td>
+                  <td class="text-nowrap">{{ document.creado_en }}</td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger">Quitar</button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -107,17 +121,20 @@ const offer = ref<ApiGetOfferResponse>()
 const isLoading = ref(false)
 const hasError = ref(false)
 
-const tabs = ref([
+const tabs = [
   { id: 'info', titulo: 'Información básica' },
   { id: 'schedule', titulo: 'Cronograma' },
-  { id: 'documents', titulo: 'Documentos' },
-])
+  { id: 'documents', titulo: 'Documentos (0)' },
+]
 
 const onGetOffer = async () => {
   try {
     isLoading.value = true
     const response = await AxiosService.get<ApiGetOfferResponse>(`/ofertas/${route.params.id}`)
     offer.value = response.data
+    if (offer.value && offer.value.documentos.length && tabs[2]) {
+      tabs[2].titulo = `Documentos (${offer.value.documentos.length})`
+    }
   } catch (error) {
     console.error('Hubo un error con la petición', error)
     hasError.value = true

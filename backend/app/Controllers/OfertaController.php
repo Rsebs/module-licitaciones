@@ -99,7 +99,7 @@ class OfertaController extends Controller
 
     $input = $this->input();
     list($data, $errors) = $this->validateOffer($input);
-    $documents = $this->readNewDocuments($input, $errors);
+    $documents = $this->readNewDocuments($input['documentos'], $errors);
 
     if ($offer->documentos()->count() + count($documents) < 1) {
       $errors['documentos'][] = 'Debes registrar al menos un documento (PDF o ZIP).';
@@ -166,18 +166,14 @@ class OfertaController extends Controller
     readfile($path);
   }
 
-  private function readNewDocuments(array $input, array &$errors)
+  private function readNewDocuments(array $inputDocuments, array &$errors)
   {
-    $titles = isset($input['doc_titulo']) ? array_values((array) $input['doc_titulo']) : [];
-    $descriptions = isset($input['doc_descripcion']) ? array_values((array) $input['doc_descripcion']) : [];
     $files = $this->files('doc_archivo');
-
-    $count = max(count($titles), count($descriptions), count($files));
+    $count = count($inputDocuments);
     $documents = [];
-
     for ($i = 0; $i < $count; $i++) {
-      $title = (isset($titles[$i]) && is_scalar($titles[$i])) ? trim((string) $titles[$i]) : '';
-      $description = (isset($descriptions[$i]) && is_scalar($descriptions[$i])) ? trim((string) $descriptions[$i]) : '';
+      $title = isset($inputDocuments[$i]['title']) ? $inputDocuments[$i]['title'] : '';
+      $description = isset($inputDocuments[$i]['description']) ? $inputDocuments[$i]['description'] : '';
       $file = isset($files[$i]) ? $files[$i] : null;
 
       $problems = [];
