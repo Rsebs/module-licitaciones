@@ -25,6 +25,17 @@ export default class AxiosService {
     throw new ApiError(errorResponse)
   }
 
+  static MIME_TYPES: Record<string, string> = {
+    'application/pdf': 'pdf',
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'application/zip': 'zip',
+    'text/csv': 'csv',
+    'application/vnd.ms-excel': 'xls',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  }
+
   static async get<T = unknown>(
     url: string,
     params?: Record<string, unknown>,
@@ -88,6 +99,39 @@ export default class AxiosService {
       return response.data
     } catch (error) {
       this.handleError(error)
+    }
+  }
+
+  static async download(
+    url: string,
+    fileName: string = 'archivo',
+    params?: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      const response = await this.axiosInstance.get<Blob>(url, {
+        params,
+        responseType: 'blob',
+      })
+
+      const headers = response.headers as Record<string, unknown>
+      const contentType = String(headers['content-type'] || '')
+      const extension = this.MIME_TYPES[contentType] || 'bin'
+
+      const cleanFileName = fileName.replace(/\.[^/.]+$/, '')
+
+      const downloadUrl = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = downloadUrl
+
+      link.setAttribute('download', `${cleanFileName}.${extension}`)
+
+      document.body.appendChild(link)
+      link.click()
+
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      this.handleError?.(error)
     }
   }
 }

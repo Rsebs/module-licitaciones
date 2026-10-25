@@ -18,9 +18,14 @@
           <td>{{ document.titulo }}</td>
           <td class="text-break">{{ document.descripcion }}</td>
           <td>
-            <a :href="document.archivo" target="_blank">
+            <p
+              class="link"
+              @click="
+                downloadDocument(document.licitacion_id, document.id, document.nombre_original)
+              "
+            >
               {{ document.nombre_original }}
-            </a>
+            </p>
           </td>
           <td class="text-nowrap">{{ document.creado_en }}</td>
           <td class="text-end">
@@ -66,4 +71,24 @@ const deleteDocument = async (documentIndex: number) => {
     }
   }
 }
+
+const downloadDocument = (licitacionId: number, documentId: number, fileName: string) => {
+  try {
+    AxiosService.download(`/ofertas/${licitacionId}/documentos/${documentId}/descargar`, fileName)
+  } catch (error) {
+    console.error('Hubo un error con la petición', error)
+  }
+}
 </script>
+
+<style scoped>
+.link {
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: darkblue;
+}
+</style>
