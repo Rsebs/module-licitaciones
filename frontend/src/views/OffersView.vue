@@ -7,6 +7,55 @@
   </div>
 
   <div class="card card-body mb-3">
+    <form @submit.prevent="findFilters">
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-sm-6 col-lg-2">
+          <label for="f-consecutivo" class="form-label mb-1">Consecutivo</label>
+          <input
+            id="f-consecutivo"
+            type="text"
+            class="form-control"
+            v-model.trim="filters.consecutivo"
+            maxlength="30"
+            placeholder="PO-0000-00"
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <label for="f-objeto" class="form-label mb-1">Objeto</label>
+          <input
+            id="f-objeto"
+            type="text"
+            class="form-control"
+            v-model.trim="filters.objeto"
+            maxlength="150"
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <label for="f-descripcion" class="form-label mb-1">Descripción</label>
+          <input
+            id="f-descripcion"
+            type="text"
+            class="form-control"
+            v-model.trim="filters.descripcion"
+            maxlength="400"
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-sm-6 col-lg-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-fill">Buscar</button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            @click="cleanFilters"
+            :disabled="!isFiltered"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </form>
     <div class="card mt-4">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -115,6 +164,12 @@ import type { APIPaginate } from '@/api/types/axiosResponse.type'
 const offers = ref<ApiOffer[]>([])
 const meta = ref<APIPaginate | null>()
 const isLoading = ref(false)
+const filters = ref({
+  consecutivo: '',
+  objeto: '',
+  descripcion: '',
+})
+const isFiltered = ref(false)
 
 const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {
   try {
@@ -127,6 +182,21 @@ const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {
   } finally {
     isLoading.value = false
   }
+}
+
+const findFilters = () => {
+  onGetOffers(filters.value)
+  isFiltered.value = true
+}
+
+const cleanFilters = () => {
+  filters.value = {
+    consecutivo: '',
+    objeto: '',
+    descripcion: '',
+  }
+  isFiltered.value = false
+  onGetOffers()
 }
 
 onMounted(() => {
