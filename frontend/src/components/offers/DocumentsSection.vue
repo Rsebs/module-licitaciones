@@ -7,37 +7,7 @@
       </button>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead>
-            <tr>
-              <th scope="col">Título</th>
-              <th scope="col">Descripción</th>
-              <th scope="col">Archivo</th>
-              <th scope="col">Registro</th>
-              <th scope="col" class="text-end">Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="documents.length === 0">
-              <td colspan="5" class="text-center">Sin documentos cargados</td>
-            </tr>
-            <tr v-else v-for="document in documents" :key="document.id">
-              <td>{{ document.titulo }}</td>
-              <td class="text-break">{{ document.descripcion }}</td>
-              <td>
-                <a :href="document.archivo" target="_blank">
-                  {{ document.nombre_original }}
-                </a>
-              </td>
-              <td class="text-nowrap">{{ document.creado_en }}</td>
-              <td class="text-end">
-                <button type="button" class="btn btn-sm btn-outline-danger">Quitar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <DocumentsTable v-model:documents="allDocuments" />
     </div>
   </section>
 
@@ -98,16 +68,16 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiOfferDocument } from '@/api/types/offer.type'
-
 import ModalCard from '@/components/ui/ModalCard.vue'
-import { ref } from 'vue'
+import DocumentsTable from './DocumentsTable.vue'
+import { ref, watch } from 'vue'
+import type { AddNewsDocuments } from './types/DocumentsSection.ts'
 
 interface Props {
-  documents: ApiOfferDocument[]
+  documents: AddNewsDocuments[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 interface FormDocument {
   titulo: string
@@ -126,6 +96,7 @@ const formDocument = ref<FormDocument>({
 const maxMB = 10
 const openModal = ref(false)
 const keyDocumentField = ref(0)
+const allDocuments = ref([...props.documents])
 
 const getFile = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -156,4 +127,11 @@ const closeModal = () => {
   openModal.value = false
   keyDocumentField.value += 1
 }
+
+watch(
+  () => props.documents,
+  (newDocs) => {
+    allDocuments.value = [...newDocs]
+  },
+)
 </script>

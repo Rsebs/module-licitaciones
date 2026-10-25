@@ -21,6 +21,11 @@ class Router
     $this->add('PUT', $pattern, $controller, $action);
   }
 
+  public function delete($pattern, $controller, $action)
+  {
+    $this->add('DELETE', $pattern, $controller, $action);
+  }
+
   private function add($method, $pattern, $controller, $action)
   {
     // '/api/ofertas/{id}'  becomes  #^/api/ofertas/(?P<id>\d+)$#

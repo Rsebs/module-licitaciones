@@ -17,11 +17,10 @@
       <ScheduleSection v-model="form" />
       <DocumentsSection
         v-if="isEdit"
-        :documents="offerDocuments"
+        :documents="[...offerDocuments.map((d) => ({ ...d, isNew: false })), ...newOfferDocuments]"
         @addDocument="
           (document: ApiOfferDocument) => {
-            newOfferDocuments.push(document)
-            offerDocuments.push(document)
+            newOfferDocuments.push({ ...document, isNew: true })
           }
         "
       />
@@ -53,6 +52,7 @@ import AxiosService from '@/api/services/ApiService'
 
 import type { ApiGetOfferResponse, ApiOfferDocument } from '@/api/types/offer.type'
 import type { CreateForm } from '@/views/interfaces/OfferFormView.ts'
+import type { AddNewsDocuments } from '@/components/offers/types/DocumentsSection'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,7 +75,7 @@ const form = ref<CreateForm>({
 const offerConsecutive = ref()
 
 const offerDocuments = ref<ApiOfferDocument[]>([])
-const newOfferDocuments = ref<ApiOfferDocument[]>([])
+const newOfferDocuments = ref<AddNewsDocuments[]>([])
 
 onMounted(async () => {
   if (!isEdit.value) return
@@ -128,7 +128,6 @@ const saveForm = async (event: Event) => {
   try {
     isSaving.value = true
 
-    console.log(newOfferDocuments.value)
     if (isEdit.value) {
       await AxiosService.postWithFile(`/ofertas/${route.params.id}`, {
         ...form.value,

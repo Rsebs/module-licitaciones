@@ -28,6 +28,7 @@ $router->get('/api/ofertas/{id}', OfertaController::class, 'show');
 $router->post('/api/ofertas', OfertaController::class, 'store');
 $router->post('/api/ofertas/{id}', OfertaController::class, 'update');
 $router->get('/api/ofertas/{id}/documentos/{docId}/descargar', OfertaController::class, 'download');
+$router->delete('/api/ofertas/{id}/documentos/{docId}/eliminar', OfertaController::class, 'deleteFile');
 
 $router->dispatch(
   $_SERVER['REQUEST_METHOD'],

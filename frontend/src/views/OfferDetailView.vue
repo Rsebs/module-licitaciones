@@ -17,9 +17,9 @@
         <h1 class="h3 mb-0">{{ offer?.objeto }}</h1>
       </div>
       <div class="d-flex gap-2">
-        <RouterLink :to="{ name: 'offers' }" class="btn btn-outline-secondary"
-          >Volver al listado</RouterLink
-        >
+        <RouterLink :to="{ name: 'offers' }" class="btn btn-outline-secondary">
+          Volver al listado
+        </RouterLink>
         <RouterLink :to="{ name: 'offer-form', params: { id: offer?.id } }" class="btn btn-primary">
           Editar oferta
         </RouterLink>
@@ -72,36 +72,7 @@
               Agrégalos desde la edición.
             </RouterLink>
           </p>
-          <div class="table-responsive" v-else>
-            <table class="table align-middle mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">Título</th>
-                  <th scope="col">Descripción</th>
-                  <th scope="col">Archivo</th>
-                  <th scope="col">Registrado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="offer?.documentos.length === 0">
-                  <td colspan="5" class="text-center">Sin documentos cargados</td>
-                </tr>
-                <tr v-else v-for="document in offer?.documentos" :key="document.id">
-                  <td>{{ document.titulo }}</td>
-                  <td class="text-break">{{ document.descripcion }}</td>
-                  <td>
-                    <a :href="document.archivo" target="_blank">
-                      {{ document.nombre_original }}
-                    </a>
-                  </td>
-                  <td class="text-nowrap">{{ document.creado_en }}</td>
-                  <td class="text-end">
-                    <button type="button" class="btn btn-sm btn-outline-danger">Quitar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DocumentsTable v-else v-model:documents="allDocuments" />
         </div>
       </template>
     </NavTabs>
@@ -111,6 +82,8 @@
 <script setup lang="ts">
 import AxiosService from '@/api/services/ApiService'
 import type { ApiGetOfferResponse } from '@/api/types/offer.type'
+import DocumentsTable from '@/components/offers/DocumentsTable.vue'
+import type { AddNewsDocuments } from '@/components/offers/types/DocumentsSection'
 import NavTabs from '@/components/ui/NavTabs.vue'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -127,6 +100,8 @@ const tabs = [
   { id: 'documents', titulo: 'Documentos (0)' },
 ]
 
+const allDocuments = ref<AddNewsDocuments[]>([])
+
 const onGetOffer = async () => {
   try {
     isLoading.value = true
@@ -135,6 +110,7 @@ const onGetOffer = async () => {
     if (offer.value && offer.value.documentos.length && tabs[2]) {
       tabs[2].titulo = `Documentos (${offer.value.documentos.length})`
     }
+    allDocuments.value = offer.value.documentos.map((d) => ({ ...d, isNew: false }))
   } catch (error) {
     console.error('Hubo un error con la petición', error)
     hasError.value = true

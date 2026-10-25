@@ -78,4 +78,16 @@ export default class AxiosService {
       this.handleError(error)
     }
   }
+
+  static async delete<T = unknown>(
+    url: string,
+    params?: Record<string, unknown>,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.axiosInstance.delete(url, { params })
+      return response.data
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
 }

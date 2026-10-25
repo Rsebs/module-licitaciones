@@ -166,6 +166,22 @@ class OfertaController extends Controller
     readfile($path);
   }
 
+  public function deleteFile($params)
+  {
+    $document = OfertaDocumento::find($params['docId']);
+    if (!$document) {
+      $this->json(['message' => 'El documento no existe o ya no está disponible.'], 404);
+      return;
+    }
+
+    FileUploader::delete($document->archivo);
+    $document->delete();
+
+    $this->json([
+      'message' => 'Documento eliminado correctamente.',
+    ]);
+  }
+
   private function readNewDocuments(array $inputDocuments, array &$errors)
   {
     $files = $this->files('doc_archivo');
