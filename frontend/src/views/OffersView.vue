@@ -2,6 +2,21 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0">Ofertas</h1>
     <div class="d-flex gap-2">
+      <div>
+        <span
+          v-if="isLoadingExport"
+          class="spinner-border spinner-border-sm me-2"
+          aria-hidden="true"
+        ></span>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          @click="exportOffers"
+          :disabled="isLoadingExport"
+        >
+          Exportar a Excel
+        </button>
+      </div>
       <RouterLink :to="{ name: 'offer-form' }" class="btn btn-primary">Nueva oferta</RouterLink>
     </div>
   </div>
@@ -121,7 +136,7 @@
             type="button"
             class="page-link"
             :disabled="(meta?.page ?? 1) <= 1"
-            @click="onGetOffers({ page: (meta?.page ?? 1) - 1 })"
+            @click="onGetOffers({ page: (meta?.page ?? 1) - 1, ...filters })"
           >
             Anterior
           </button>
@@ -134,7 +149,7 @@
           class="page-item"
           :class="{ active: p === meta?.page }"
         >
-          <button type="button" class="page-link" @click="onGetOffers({ page: p })">
+          <button type="button" class="page-link" @click="onGetOffers({ page: p, ...filters })">
             {{ p }}
           </button>
         </li>
@@ -145,7 +160,7 @@
             type="button"
             class="page-link"
             :disabled="(meta?.page ?? 1) >= (meta?.last_page ?? 1)"
-            @click="onGetOffers({ page: (meta?.page ?? 1) + 1 })"
+            @click="onGetOffers({ page: (meta?.page ?? 1) + 1, ...filters })"
           >
             Siguiente
           </button>
@@ -170,6 +185,7 @@ const filters = ref({
   descripcion: '',
 })
 const isFiltered = ref(false)
+const isLoadingExport = ref(false)
 
 const onGetOffers = async (queryParams: Record<string, unknown> = {}) => {
   try {
@@ -197,6 +213,17 @@ const cleanFilters = () => {
   }
   isFiltered.value = false
   onGetOffers()
+}
+
+const exportOffers = async () => {
+  try {
+    isLoadingExport.value = true
+    await AxiosService.download('/ofertas/export', 'ofertas', filters.value)
+  } catch (error) {
+    console.error('Hubo un error con la petición', error)
+  } finally {
+    isLoadingExport.value = false
+  }
 }
 
 onMounted(() => {

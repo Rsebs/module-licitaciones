@@ -6,22 +6,17 @@ use App\FileUploader;
 use App\Models\Actividad;
 use App\Models\Oferta;
 use App\Models\OfertaDocumento;
+use App\XlsxWriter;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class OfertaController extends Controller
 {
   public function index()
   {
-    $page    = max(1, (int) $this->query('page', 1));
+    $page = max(1, (int) $this->query('page', 1));
     $perPage = min(50, max(1, (int) $this->query('per_page', 10)));
 
-    $query = Oferta::query();
-    foreach (['consecutivo', 'objeto', 'descripcion'] as $field) {
-      $value = $this->query($field);
-      if ($value !== '') {
-        $query->where($field, 'like', '%' . $value . '%');
-      }
-    }
+    $query = $this->filteredQuery();
 
     $total  = $query->count();
     $offers = $query->orderBy('id', 'desc')->forPage($page, $perPage)->get();
@@ -217,6 +212,50 @@ class OfertaController extends Controller
     }
 
     return $documents;
+  }
+
+  public function export($params)
+  {
+    $excel = new XlsxWriter(
+      'Ofertas',
+      ['Consecutivo', 'Objeto', 'Descripción', 'Fecha de inicio', 'Fecha de cierre', 'Estado'],
+      [16, 40, 60, 16, 16, 14]
+    );
+
+    foreach ($this->filteredQuery()->orderBy('id', 'desc')->cursor() as $offer) {
+      $excel->addRow([
+        $offer->consecutivo,
+        $offer->objeto,
+        $offer->descripcion,
+        $offer->fecha_inicio,
+        $offer->fecha_cierre,
+        $offer->estado,
+      ]);
+    }
+
+    $path = $excel->save();
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="ofertas_' . date('Ymd_His') . '.xlsx"');
+    header('Content-Length: ' . filesize($path));
+    header('Cache-Control: no-store');
+    readfile($path);
+    unlink($path);
+  }
+
+  private function filteredQuery()
+  {
+    $query = Oferta::query();
+
+    foreach (['consecutivo', 'objeto', 'descripcion'] as $field) {
+      $value = $this->query($field);
+      if ($value !== '') {
+        $value = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+        $query->where($field, 'like', '%' . $value . '%');
+      }
+    }
+
+    return $query;
   }
 
   private function validateOffer(array $input)
