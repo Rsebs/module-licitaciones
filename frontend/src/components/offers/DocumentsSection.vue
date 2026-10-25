@@ -7,7 +7,10 @@
       </button>
     </div>
     <div class="card-body">
-      <DocumentsTable v-model:documents="allDocuments" />
+      <DocumentsTable
+        v-model:documents="allDocuments"
+        @delete-document="emits('delete-document', $event)"
+      />
     </div>
   </section>
 
@@ -72,6 +75,7 @@ import ModalCard from '@/components/ui/ModalCard.vue'
 import DocumentsTable from './DocumentsTable.vue'
 import { ref, watch } from 'vue'
 import type { AddNewsDocuments } from './types/DocumentsSection.ts'
+import { notify } from '@/helpers/notify.ts'
 
 interface Props {
   documents: AddNewsDocuments[]
@@ -85,7 +89,7 @@ interface FormDocument {
   archivo: File | null
 }
 
-const emits = defineEmits(['addDocument'])
+const emits = defineEmits(['addDocument', 'delete-document'])
 
 const formDocument = ref<FormDocument>({
   titulo: '',
@@ -108,10 +112,15 @@ const getFile = (event: Event) => {
 
 const addDocument = () => {
   if (
-    !formDocument.value.titulo ||
-    !formDocument.value.descripcion ||
+    !formDocument.value.titulo.trim() ||
+    !formDocument.value.descripcion.trim() ||
     !formDocument.value.archivo
   ) {
+    notify(
+      'Error',
+      'Todos los campos son obligatorios. Por favor revise qué campos faltan por rellenar',
+      'error',
+    )
     return
   }
   emits('addDocument', formDocument.value)

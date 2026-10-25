@@ -42,7 +42,7 @@
               <td class="text-nowrap num">{{ o.fecha_inicio }}</td>
               <td class="text-nowrap num">{{ o.fecha_cierre }}</td>
               <td>
-                <span class="badge">{{ o.estado }}</span>
+                {{ o.estado }}
               </td>
               <td class="text-end">
                 <RouterLink

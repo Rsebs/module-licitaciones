@@ -23,6 +23,11 @@
             newOfferDocuments.push({ ...document, isNew: true })
           }
         "
+        @delete-document="
+          (documentIndex) => {
+            newOfferDocuments.splice(documentIndex, 1)
+          }
+        "
       />
 
       <div class="d-flex flex-wrap justify-content-end align-items-center gap-3 mt-4">

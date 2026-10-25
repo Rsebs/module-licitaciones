@@ -14,60 +14,67 @@
         <tr v-if="documentModelValue.length === 0">
           <td colspan="5" class="text-center">Sin documentos cargados</td>
         </tr>
-        <tr v-else v-for="(document, index) in documentModelValue" :key="document.id">
-          <td>{{ document.titulo }}</td>
-          <td class="text-break">{{ document.descripcion }}</td>
-          <td>
-            <p
-              class="link"
-              @click="
-                downloadDocument(document.licitacion_id, document.id, document.nombre_original)
-              "
-            >
-              {{ document.nombre_original }}
-            </p>
-          </td>
-          <td class="text-nowrap">{{ document.creado_en }}</td>
-          <td class="text-end">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-danger"
-              @click="deleteDocument(index)"
-            >
-              Quitar
-            </button>
-          </td>
-        </tr>
+        <template v-else v-for="(document, index) in documentModelValue" :key="document.id">
+          <tr :class="{ 'table-success': document.isNew }">
+            <td>{{ document.titulo }}</td>
+            <td class="text-break">{{ document.descripcion }}</td>
+            <td>
+              <p
+                class="link"
+                @click="
+                  downloadDocument(document.licitacion_id, document.id, document.nombre_original)
+                "
+              >
+                {{ document.nombre_original }}
+              </p>
+            </td>
+            <td class="text-nowrap">{{ document.creado_en }}</td>
+            <td class="text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger"
+                @click="deleteDocument(index)"
+              >
+                Quitar
+              </button>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import type { AddNewsDocuments } from './types/DocumentsSection'
 import AxiosService from '@/api/services/ApiService'
+import { notify, warningNotify } from '@/helpers/notify'
 
 const documentModelValue = defineModel<AddNewsDocuments[]>('documents', {
   required: true,
 })
-const isLoading = ref(false)
+
+const emits = defineEmits(['reload-documents', 'delete-document'])
 
 const deleteDocument = async (documentIndex: number) => {
+  const response = await warningNotify()
+  if (!response) return
+
   const document = documentModelValue.value[documentIndex]
   if (document?.isNew) {
     documentModelValue.value.splice(documentIndex, 1)
+    notify('Documento eliminado', 'El documento ha sido eliminado correctamente', 'success')
+    emits('delete-document', documentIndex)
   } else {
     try {
-      isLoading.value = true
       await AxiosService.delete(
         `/ofertas/${document?.licitacion_id}/documentos/${document?.id}/eliminar`,
       )
       documentModelValue.value.splice(documentIndex, 1)
+      notify('Documento eliminado', 'El documento ha sido eliminado correctamente', 'success')
+      emits('reload-documents')
     } catch (error) {
       console.error('Hubo un error con la petición', error)
-    } finally {
-      isLoading.value = false
     }
   }
 }

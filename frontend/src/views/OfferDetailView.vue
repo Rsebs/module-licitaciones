@@ -72,7 +72,7 @@
               Agrégalos desde la edición.
             </RouterLink>
           </p>
-          <DocumentsTable v-else v-model:documents="allDocuments" />
+          <DocumentsTable v-else v-model:documents="allDocuments" @reload-documents="onGetOffer" />
         </div>
       </template>
     </NavTabs>
@@ -107,7 +107,7 @@ const onGetOffer = async () => {
     isLoading.value = true
     const response = await AxiosService.get<ApiGetOfferResponse>(`/ofertas/${route.params.id}`)
     offer.value = response.data
-    if (offer.value && offer.value.documentos.length && tabs[2]) {
+    if (offer.value && offer.value?.documentos && tabs[2]) {
       tabs[2].titulo = `Documentos (${offer.value.documentos.length})`
     }
     allDocuments.value = offer.value.documentos.map((d) => ({ ...d, isNew: false }))
