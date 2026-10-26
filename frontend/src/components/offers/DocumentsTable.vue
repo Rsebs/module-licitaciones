@@ -57,6 +57,11 @@ const documentModelValue = defineModel<AddNewsDocuments[]>('documents', {
 const emits = defineEmits(['reload-documents', 'delete-document'])
 
 const deleteDocument = async (documentIndex: number) => {
+  if (documentModelValue.value.length === 1) {
+    notify('Error', 'No se puede eliminar el último documento', 'error')
+    return
+  }
+
   const response = await warningNotify()
   if (!response) return
 

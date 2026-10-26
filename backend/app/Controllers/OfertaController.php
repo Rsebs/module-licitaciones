@@ -94,8 +94,11 @@ class OfertaController extends Controller
 
     $input = $this->input();
     list($data, $errors) = $this->validateOffer($input);
-    $documents = $this->readNewDocuments($input['documentos'], $errors);
 
+    $documents = [];
+    if (isset($input['documentos']))
+      $documents = $this->readNewDocuments($input['documentos'], $errors);
+    
     if ($offer->documentos()->count() + count($documents) < 1) {
       $errors['documentos'][] = 'Debes registrar al menos un documento (PDF o ZIP).';
     }

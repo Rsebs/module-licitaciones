@@ -58,6 +58,7 @@ import AxiosService from '@/api/services/ApiService'
 import type { ApiGetOfferResponse, ApiOfferDocument } from '@/api/types/offer.type'
 import type { CreateForm } from '@/views/interfaces/OfferFormView.ts'
 import type { AddNewsDocuments } from '@/components/offers/types/DocumentsSection'
+import { notify } from '@/helpers/notify'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,7 +111,7 @@ onMounted(async () => {
 })
 
 const validateForm = () => {
-  return (
+  const isFormFilled =
     form.value.objeto.trim().length > 0 &&
     form.value.descripcion.trim().length > 0 &&
     form.value.moneda !== '' &&
@@ -120,7 +121,22 @@ const validateForm = () => {
     form.value.hora_inicio !== '' &&
     form.value.fecha_cierre !== '' &&
     form.value.hora_cierre !== ''
-  )
+
+  if (isEdit.value) {
+    const allDocuments = [
+      ...offerDocuments.value.map((d) => ({ ...d, isNew: false })),
+      ...newOfferDocuments.value,
+    ]
+
+    if (allDocuments.length === 0) {
+      notify('¡Error!', 'Debe agregar al menos un documento', 'error')
+
+      return false
+    }
+    return isFormFilled && allDocuments.length > 0
+  }
+
+  return isFormFilled
 }
 
 const saveForm = async (event: Event) => {

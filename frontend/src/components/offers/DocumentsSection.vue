@@ -25,10 +25,7 @@
         maxlength="100"
         autocomplete="off"
         placeholder="Titulo del documento"
-        required
       />
-      <div class="invalid-feedback">El título es obligatorio.</div>
-
       <div class="d-flex justify-content-end mt-1">
         <span class="form-text mt-0">{{ formDocument.titulo.length }}/100</span>
       </div>
@@ -41,10 +38,8 @@
         class="form-control"
         rows="2"
         maxlength="200"
-        required
         placeholder="Descripción corta del documento"
       ></textarea>
-      <div class="invalid-feedback">La descripción es obligatoria.</div>
 
       <div class="d-flex justify-content-end mt-1">
         <span class="form-text mt-0">{{ formDocument.descripcion.length }}/100</span>
@@ -144,3 +139,19 @@ watch(
   },
 )
 </script>
+
+<style scoped>
+/* Neutraliza los estilos :valid/:invalid que Bootstrap aplica al agregar was-validated en el form padre */
+.form-control:valid,
+.form-control:invalid {
+  border-color: var(--bs-border-color);
+  background-image: none;
+  box-shadow: none;
+}
+
+.form-control:focus:valid,
+.form-control:focus:invalid {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+</style>
