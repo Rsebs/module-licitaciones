@@ -11,12 +11,12 @@ class Database
     $capsule = new Capsule;
     $capsule->addConnection([
       'driver'    => 'mysql',
-      'host'      => '127.0.0.1',
-      'database'  => 'modulo_licitaciones',
-      'username'  => 'user_licitaciones',
-      'password'  => 'modulo123',
-      'charset'   => 'utf8mb4',
-      'collation' => 'utf8mb4_unicode_ci',
+      'host'      => $_ENV['DB_HOST'],
+      'database'  => $_ENV['DB_DATABASE'],
+      'username'  => $_ENV['DB_USERNAME'],
+      'password'  => $_ENV['DB_PASSWORD'],
+      'charset'   => $_ENV['DB_CHARSET'],
+      'collation' => $_ENV['DB_COLLATION'],
     ]);
     $capsule->setAsGlobal();
     $capsule->bootEloquent();

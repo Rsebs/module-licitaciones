@@ -13,6 +13,9 @@ header("Content-Type: application/json; charset=UTF-8");
 
 require __DIR__ . '/../vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
 use App\Database;
 use App\Router;
 use App\Controllers\ActividadController;
