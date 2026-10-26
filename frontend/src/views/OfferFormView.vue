@@ -90,6 +90,16 @@ onMounted(async () => {
     isLoading.value = true
     const response = await AxiosService.get<ApiGetOfferResponse>(`/ofertas/${route.params.id}`)
 
+    if (response.data.estado !== 'Activo') {
+      notify(
+        'Oferta no editable',
+        `La oferta está en estado "${response.data.estado}" y no puede editarse.`,
+        'error',
+      )
+      router.push({ name: 'offer-details', params: { id: route.params.id } })
+      return
+    }
+
     offerConsecutive.value = response.data.consecutivo
     form.value = {
       objeto: response.data.objeto,

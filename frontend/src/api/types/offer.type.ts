@@ -1,5 +1,7 @@
 import type { MoneyTypes } from '@/components/offers/types/BasicInfoSection'
 
+export type OfertaEstado = 'Activo' | 'Publicada' | 'En evaluación' | 'Finalizada'
+
 export interface ApiOffer {
   id: number
   consecutivo: string
@@ -12,7 +14,7 @@ export interface ApiOffer {
   hora_inicio: string
   fecha_cierre: string
   hora_cierre: string
-  estado: string
+  estado: OfertaEstado
   creado_en: string
   actualizado_en: string
 }
@@ -29,7 +31,7 @@ export interface ApiGetOfferResponse {
   hora_inicio: string
   fecha_cierre: string
   hora_cierre: string
-  estado: string
+  estado: OfertaEstado
   creado_en: string
   actualizado_en: string
   actividad: {

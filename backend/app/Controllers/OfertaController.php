@@ -21,6 +21,11 @@ class OfertaController extends Controller
     $total  = $query->count();
     $offers = $query->orderBy('id', 'desc')->forPage($page, $perPage)->get();
 
+    foreach ($offers as $offer) {
+      if ($offer->estado !== 'Finalizada')
+        $offer->estado = $this->computeEstatus($offer);
+    }
+
     $this->json([
       'data' => $offers,
       'meta' => [
@@ -40,6 +45,9 @@ class OfertaController extends Controller
       $this->json(['message' => 'La oferta no existe.'], 404);
       return;
     }
+
+    if ($offer->estado !== 'Finalizada')
+      $offer->estado = $this->computeEstatus($offer);
 
     $this->json(['data' => $offer]);
   }
@@ -64,7 +72,7 @@ class OfertaController extends Controller
       $offer = $connection->transaction(function () use ($data) {
         $new = new Oferta($data);
         $new->consecutivo = Oferta::nextConsecutive();
-        $new->estado = 'Borrador';
+        $new->estado = 'Activo';
         $new->save();
         return $new;
       });
@@ -92,13 +100,18 @@ class OfertaController extends Controller
       return;
     }
 
+    if ($offer->estado !== 'Activo') {
+      $this->json(['message' => 'Solo se puede editar una oferta en estado Activo.'], 422);
+      return;
+    }
+
     $input = $this->input();
     list($data, $errors) = $this->validateOffer($input);
 
     $documents = [];
     if (isset($input['documentos']))
       $documents = $this->readNewDocuments($input['documentos'], $errors);
-    
+
     if ($offer->documentos()->count() + count($documents) < 1) {
       $errors['documentos'][] = 'Debes registrar al menos un documento (PDF o ZIP).';
     }
@@ -112,7 +125,6 @@ class OfertaController extends Controller
     try {
       Capsule::connection()->transaction(function () use ($offer, $data, $documents, &$savedFiles) {
         $offer->fill($data);
-        $offer->estado = 'Publicada';
         $offer->save();
 
         foreach ($documents as $document) {
@@ -136,6 +148,31 @@ class OfertaController extends Controller
 
     $this->json([
       'message' => 'Oferta actualizada correctamente.',
+      'data' => Oferta::with(['actividad', 'documentos'])->find($offer->id),
+    ]);
+  }
+
+  public function finalize($params)
+  {
+    $offer = Oferta::find($params['id']);
+
+    if (!$offer) {
+      $this->json(['message' => 'La oferta no existe.'], 404);
+      return;
+    }
+
+    $actualStatus = $this->computeEstatus($offer);
+
+    if ($actualStatus !== 'En evaluación') {
+      $this->json(['message' => 'Solo se puede finalizar una oferta que esté En evaluación.'], 422);
+      return;
+    }
+
+    $offer->estado = 'Finalizada';
+    $offer->save();
+
+    $this->json([
+      'message' => 'Oferta finalizada correctamente.',
       'data' => Oferta::with(['actividad', 'documentos'])->find($offer->id),
     ]);
   }
@@ -259,6 +296,31 @@ class OfertaController extends Controller
     }
 
     return $query;
+  }
+
+  /**
+   * Calcula el estado de la oferta basándose en las fechas actuales.
+   * - Activo: creada, aún no ha llegado la fecha de inicio.
+   * - Publicada: la fecha/hora de inicio ya pasó pero no la de cierre.
+   * - En evaluación: la fecha/hora de cierre ya pasó.
+   * - Finalizada: el evaluador la marcó como finalizada (estado persistente en BD).
+   */
+  private function computeEstatus(Oferta $offer): string
+  {
+    if ($offer->estado === 'Finalizada')
+      return 'Finalizada';
+
+    $now = new \DateTime('now', new \DateTimeZone(date_default_timezone_get()));
+    $fechaInicio = \DateTime::createFromFormat('Y-m-d H:i:s', $offer->fecha_inicio . ' ' . $offer->hora_inicio);
+    $fechaCierre = \DateTime::createFromFormat('Y-m-d H:i:s', $offer->fecha_cierre . ' ' . $offer->hora_cierre);
+
+    if ($fechaCierre && $now >= $fechaCierre)
+      return 'En evaluación';
+
+    if ($fechaInicio && $now >= $fechaInicio)
+      return 'Publicada';
+
+    return 'Activo';
   }
 
   private function validateOffer(array $input)

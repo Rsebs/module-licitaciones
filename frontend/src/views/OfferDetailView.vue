@@ -13,16 +13,39 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
       <div>
-        <p class="mb-1 text-body-secondary num">{{ offer?.consecutivo }} - {{ offer?.estado }}</p>
+        <p class="mb-1 text-body-secondary num">
+          {{ offer?.consecutivo }}
+          <span class="ms-2 badge" :class="getClassBadgeStateOffer(offer?.estado ?? '')">
+            {{ offer?.estado }}
+          </span>
+        </p>
         <h1 class="h3 mb-0">{{ offer?.objeto }}</h1>
       </div>
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
         <RouterLink :to="{ name: 'offers' }" class="btn btn-outline-secondary">
           Volver al listado
         </RouterLink>
-        <RouterLink :to="{ name: 'offer-form', params: { id: offer?.id } }" class="btn btn-primary">
+        <RouterLink
+          v-if="offer?.estado === 'Activo'"
+          :to="{ name: 'offer-form', params: { id: offer?.id } }"
+          class="btn btn-primary"
+        >
           Editar oferta
         </RouterLink>
+        <button
+          v-if="offer?.estado === 'En evaluación'"
+          type="button"
+          class="btn btn-success"
+          :disabled="isFinalizing"
+          @click="finalizeOffer"
+        >
+          <span
+            class="spinner-border spinner-border-sm me-1"
+            aria-hidden="true"
+            v-if="isFinalizing"
+          ></span>
+          {{ isFinalizing ? 'Finalizando…' : 'Finalizar oferta' }}
+        </button>
       </div>
     </div>
 
@@ -68,7 +91,10 @@
         <div>
           <p v-if="offer?.documentos.length === 0" class="mb-0">
             Esta oferta aún no tiene documentos.
-            <RouterLink :to="{ name: 'offer-form', params: { id: offer?.id } }">
+            <RouterLink
+              v-if="offer?.estado === 'Activo'"
+              :to="{ name: 'offer-form', params: { id: offer?.id } }"
+            >
               Agrégalos desde la edición.
             </RouterLink>
           </p>
@@ -85,6 +111,8 @@ import type { ApiGetOfferResponse } from '@/api/types/offer.type'
 import DocumentsTable from '@/components/offers/DocumentsTable.vue'
 import type { AddNewsDocuments } from '@/components/offers/types/DocumentsSection'
 import NavTabs from '@/components/ui/NavTabs.vue'
+import { getClassBadgeStateOffer } from '@/helpers/getClasses'
+import { notify } from '@/helpers/notify'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -93,6 +121,7 @@ const route = useRoute()
 const offer = ref<ApiGetOfferResponse>()
 const isLoading = ref(false)
 const hasError = ref(false)
+const isFinalizing = ref(false)
 
 const tabs = [
   { id: 'info', titulo: 'Información básica' },
@@ -116,6 +145,24 @@ const onGetOffer = async () => {
     hasError.value = true
   } finally {
     isLoading.value = false
+  }
+}
+
+const finalizeOffer = async () => {
+  try {
+    isFinalizing.value = true
+    await AxiosService.post(`/ofertas/${route.params.id}/finalizar`, {})
+    notify(
+      'Oferta finalizada',
+      'La oferta ha sido marcada como Finalizada correctamente.',
+      'success',
+    )
+    await onGetOffer()
+  } catch (error) {
+    console.error('Hubo un error al finalizar la oferta', error)
+    notify('Error', 'No se pudo finalizar la oferta. Inténtalo de nuevo.', 'error')
+  } finally {
+    isFinalizing.value = false
   }
 }
 

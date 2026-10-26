@@ -32,6 +32,7 @@ $router->post('/api/ofertas', OfertaController::class, 'store');
 $router->post('/api/ofertas/{id}', OfertaController::class, 'update');
 $router->get('/api/ofertas/{id}/documentos/{docId}/descargar', OfertaController::class, 'download');
 $router->delete('/api/ofertas/{id}/documentos/{docId}/eliminar', OfertaController::class, 'deleteFile');
+$router->post('/api/ofertas/{id}/finalizar', OfertaController::class, 'finalize');
 $router->get('/api/ofertas/export', OfertaController::class, 'export');
 
 $router->dispatch(

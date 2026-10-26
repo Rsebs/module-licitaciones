@@ -106,7 +106,7 @@
               <td class="text-nowrap num">{{ o.fecha_inicio }}</td>
               <td class="text-nowrap num">{{ o.fecha_cierre }}</td>
               <td>
-                {{ o.estado }}
+                <span class="badge" :class="getClassBadgeStateOffer(o.estado)">{{ o.estado }}</span>
               </td>
               <td class="text-end">
                 <RouterLink
@@ -175,6 +175,7 @@ import { onMounted, ref } from 'vue'
 import AxiosService from '@/api/services/ApiService'
 import type { ApiOffer } from '@/api/types/offer.type'
 import type { APIPaginate } from '@/api/types/axiosResponse.type'
+import { getClassBadgeStateOffer } from '@/helpers/getClasses'
 
 const offers = ref<ApiOffer[]>([])
 const meta = ref<APIPaginate | null>()
