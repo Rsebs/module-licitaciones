@@ -5,5 +5,5 @@ export interface BasicInfoForm {
   descripcion: string
   moneda: MoneyTypes | ''
   presupuesto: number | ''
-  actividad_id: number | null
+  actividad_id: number | ''
 }

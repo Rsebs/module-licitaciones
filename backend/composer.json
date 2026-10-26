@@ -8,6 +8,7 @@
     }
   },
   "scripts": {
-    "start": "php -d upload_max_filesize=10M -d post_max_size=12M -S localhost:8001 -t public public/index.php"
+    "start": "php -d upload_max_filesize=10M -d post_max_size=12M -S localhost:8001 -t public public/index.php",
+    "import:activities": "@php scripts/import-activities.php"
   }
 }

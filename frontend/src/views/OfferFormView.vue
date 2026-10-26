@@ -71,7 +71,7 @@ const form = ref<CreateForm>({
   descripcion: '',
   moneda: '',
   presupuesto: '',
-  actividad_id: null,
+  actividad_id: '',
   fecha_inicio: '',
   hora_inicio: '',
   fecha_cierre: '',
